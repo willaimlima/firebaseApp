@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -16,120 +17,144 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.william.model.Upload;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
 
 public class StorageActivity extends AppCompatActivity {
-    //refencia FirebaseStorage
+    //referencia p/ FirebaseStorage
     private FirebaseStorage storage = FirebaseStorage.getInstance();
     private Button btnUpload,btnGaleria;
     private ImageView imageView;
-    private Uri imageUri;
+    private Uri imageUri=null;
     private EditText editNome;
+
+    // referencia p/ um no RealtimeDB
+    private DatabaseReference database = FirebaseDatabase.getInstance().getReference("upload");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_storage);
         btnUpload = findViewById(R.id.storage_btn_upload);
         imageView = findViewById(R.id.storage_image_cel);
-        btnGaleria = findViewById(R.id.storege_btn_galeria);
-        editNome = findViewById((R.id.storage_edit_nome);
-        if(editNome.getText().toString().isEmpty()) {
-            Toast.makeText(this,"Digite seu nome para imagem", Toast.LENGTH_LONG).show();
-            return;
-        }
-        btnUpload.setOnClickListener(v -> {
-            if (imageUri != null) {
+        btnGaleria = findViewById(R.id.storage_btn_galeria);
+        editNome = findViewById(R.id.storage_edit_nome);
+
+
+        btnUpload.setOnClickListener(v ->{
+            if(editNome.getText().toString().isEmpty()){
+                Toast.makeText(this,"Digite um nome para Imagem",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if(imageUri!=null){
                 uploadImagemUri();
-            } else {
+            }else {
                 uploadImagemByte();
             }
         });
 
-        btnGaleria.setOnClickListener( v ->{
+        btnGaleria.setOnClickListener( v -> {
             Intent intent = new Intent();
-            // intent implicita -> para um arquivo de celular
+            //intent implicita -> pegar um arquivo do celular
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
+            //inicia uma Activity, e espera o retorno (foto)
             startActivityForResult(intent,112);
         });
 
     }
 
-    private void uploadImagemUri(){
-            String tipo = getFileExtension(imageUri);
-            Date d = new Date();
-            String nome = editNome.getText().toString()+"-"+d.getTime();
-            StorageReference imagemRef = storage.getReference().child("imagens/"+nome+tipo);
+    private void uploadImagemUri() {
+        String tipo = getFileExtension(imageUri);
+        //referencia do arquivo no firebase
+        Date d = new Date();
+        String nome = editNome.getText().toString()+"-"+d.getTime();
+        //Criando referencia da imagem no storage
+        StorageReference imagemRef = storage.getReference()
+                            .child("imagens/"+nome+"-"+d.getTime()+"."+tipo);
 
-            imagemRef.putFile(imageUri)
-            .addOnSuccessListener(taskSnapshot -> {
-            Toast.makeText(this, "Upload com sucesso", Toast.LENGTH_LONG).show();
-            })
-        }
+        imagemRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    Toast.makeText(this,"Upload feito com sucesso",Toast.LENGTH_SHORT).show();
+                    /* inserir dados da imagem no RealtimeDatabase */
+                    // pager a URL da imagem
+                    taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(uri -> {
+                        //inserir no Database
 
+                        //criando referencia(database) do ipload
+                        DatabaseReference refUpload = database.push();
+                        String id = refUpload.getKey();
+                        Upload upload = new Upload(id,nome,uri.toString());
+                        //salvando upload no db
+                        refUpload .setValue(upload);
+
+                    });
+
+
+                })
+
+                .addOnFailureListener(e -> {
+                    e.printStackTrace();
+                });
+
+    }
+    //retornar o tipo(.png, .jpg) da imagem
     private String getFileExtension(Uri imageUri) {
-    });
-
-
-
-
-
-
-
-
-
-        }
-        // retonar  o tipo (.png, jpg) da imagem
-        private String = getFileExtension(Uri imageUri){
-            ContenResolver cr = getContentResolver();
-            return MimeTypeMap.getSingleton().getExtensionFromMimeType(cr.getType(imageUri));
-        }
-
+        ContentResolver cr = getContentResolver();
+        return MimeTypeMap.getSingleton()
+                .getExtensionFromMimeType(cr.getType(imageUri));
+    }
+    // resultado da startAcitivityResult()
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.i("RESULT", "requestCode: "+ requestCode +"resultCode:"+ resultCode);
-        if(requestCode==112 && resultCode== Activity.RESULT_OK) {
-            //caso o usuario seleciinar umaimagem da galeria
+        Log.i("RESULT", "requestCode: "+ requestCode +
+                ",resultCode: "+ resultCode);
+        if(requestCode==112 && resultCode== Activity.RESULT_OK){
+            //caso o usuario selecionou uma imagem da galeria
 
-            //endreço da imagem selecionada
+            //endereco da imagem selecionada
             imageUri = data.getData();
             imageView.setImageURI(imageUri);
-
         }
     }
 
-    public byte[] converterImage2Byte(ImageView imageView){
-        //converter imagemView -> byte{}
+    public byte[] convertImage2Byte(ImageView imageView){
+        //Converter ImageView -> byte[]
         Bitmap bitmap = ( (BitmapDrawable) imageView.getDrawable() ).getBitmap();
-        //objeto baos -> amazenar a imagem convertida
+        //objeto baos -> armazenar a imagem convertida
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
         return baos.toByteArray();
     }
-    // fazer um upload de uma imagem convertida p/ bytes
-    public  void uploadImagemByte(){
-        byte [] data = converterImage2Byte(imageView);
+    //fazer um upload de uma imagem convertida p/ bytes
+    public void uploadImagemByte(){
+        byte[] data = convertImage2Byte(imageView);
 
-        //criar uma referencia p/ imagem no storage
-        StorageReference imagemRef = storage.getReference().child("imagens/01.jpeg");
-        //Realiza a opload da imagem
+        //Criar uma referencia p/ imagem no Storage
+        StorageReference imagemRef = storage.getReference()
+                .child("imagens/01.jpeg");
+        //Realiza o upload da imagem
         imagemRef.putBytes(data)
-        .addOnSuccessListener(taskSnapshot -> {
-            Toast.makeText(this, "Upload feito com sucesso!", Toast.LENGTH_SHORT).show();
-            Log.i("UPLOAD", "Sucesso");
-        })
-        .addOnFailureListener(e -> {
-            e.printStackTrace();
-        })
-        ;
+                .addOnSuccessListener(taskSnapshot -> {
 
-        //storage.getReference().putBytes();
+                    Toast.makeText(this, "Upload feito com sucesso!",Toast.LENGTH_SHORT).show();
+                    Log.i("UPLOAD","Sucesso");
+
+                })
+                .addOnFailureListener(e -> {
+                    e.printStackTrace();
+                });
+
 
     }
 }
