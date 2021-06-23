@@ -17,15 +17,18 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.william.firebaseapp.R;
 import com.william.model.Upload;
+import com.william.util.LoadingDialog;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
+
 
 public class StorageActivity extends AppCompatActivity {
     //referencia p/ FirebaseStorage
@@ -34,9 +37,9 @@ public class StorageActivity extends AppCompatActivity {
     private ImageView imageView;
     private Uri imageUri=null;
     private EditText editNome;
-
-    // referencia p/ um no RealtimeDB
-    private DatabaseReference database = FirebaseDatabase.getInstance().getReference("upload");
+    // referencia p/ um nó RealtimeDB
+    private DatabaseReference database = FirebaseDatabase.getInstance()
+            .getReference("uploads");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +49,6 @@ public class StorageActivity extends AppCompatActivity {
         imageView = findViewById(R.id.storage_image_cel);
         btnGaleria = findViewById(R.id.storage_btn_galeria);
         editNome = findViewById(R.id.storage_edit_nome);
-
 
         btnUpload.setOnClickListener(v ->{
             if(editNome.getText().toString().isEmpty()){
@@ -67,41 +69,59 @@ public class StorageActivity extends AppCompatActivity {
             //intent implicita -> pegar um arquivo do celular
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
-            //inicia uma Activity, e espera o retorno (foto)
+            // inicia uma Activity, e espera o retorno(foto)
             startActivityForResult(intent,112);
         });
 
     }
 
     private void uploadImagemUri() {
+
+        LoadingDialog dialog = new LoadingDialog(this, R.layout.custom_dialog);
+        dialog.startLoadingDialog();
+
         String tipo = getFileExtension(imageUri);
         //referencia do arquivo no firebase
         Date d = new Date();
-        String nome = editNome.getText().toString()+"-"+d.getTime();
-        //Criando referencia da imagem no storage
+        String nome = editNome.getText().toString();
+
+        // criando referencia da imagem no Storage
         StorageReference imagemRef = storage.getReference()
-                            .child("imagens/"+nome+"-"+d.getTime()+"."+tipo);
+                .child("imagens/"+nome+
+                        "-"+d.getTime()+"."+tipo);
 
         imagemRef.putFile(imageUri)
                 .addOnSuccessListener(taskSnapshot -> {
-                    Toast.makeText(this,"Upload feito com sucesso",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,"Upload feito com sucesso",
+                            Toast.LENGTH_SHORT).show();
+
                     /* inserir dados da imagem no RealtimeDatabase */
-                    // pager a URL da imagem
-                    taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(uri -> {
-                        //inserir no Database
 
-                        //criando referencia(database) do ipload
-                        DatabaseReference refUpload = database.push();
-                        String id = refUpload.getKey();
-                        Upload upload = new Upload(id,nome,uri.toString());
-                        //salvando upload no db
-                        refUpload .setValue(upload);
+                    //pegar a URL da imagem
+                    taskSnapshot.getStorage().getDownloadUrl()
+                            .addOnSuccessListener(uri -> {
+                                // inserir no database
 
-                    });
+                                //criando referencia(databae) do upload
+                                DatabaseReference refUpload = database.push();
+                                String id = refUpload.getKey();
 
+                                Upload upload = new Upload(id,nome,uri.toString());
+                                //salvando upload no db
+                                refUpload.setValue(upload)
+                                        .addOnSuccessListener(aVoid -> {
+                                            dialog.dismissDialog();
+                                            Toast.makeText(getApplicationContext(),
+                                                    "Upload feito com sucesso!",
+                                                    Toast.LENGTH_SHORT ).show();
+
+                                            finish();
+                                        });
+
+
+                            });
 
                 })
-
                 .addOnFailureListener(e -> {
                     e.printStackTrace();
                 });
@@ -113,7 +133,8 @@ public class StorageActivity extends AppCompatActivity {
         return MimeTypeMap.getSingleton()
                 .getExtensionFromMimeType(cr.getType(imageUri));
     }
-    // resultado da startAcitivityResult()
+
+    //resultado do startActivityResult()
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -147,7 +168,8 @@ public class StorageActivity extends AppCompatActivity {
         imagemRef.putBytes(data)
                 .addOnSuccessListener(taskSnapshot -> {
 
-                    Toast.makeText(this, "Upload feito com sucesso!",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Upload feito com sucesso!",
+                            Toast.LENGTH_SHORT).show();
                     Log.i("UPLOAD","Sucesso");
 
                 })

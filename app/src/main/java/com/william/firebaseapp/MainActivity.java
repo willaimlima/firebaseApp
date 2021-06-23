@@ -2,12 +2,15 @@ package com.william.firebaseapp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -15,7 +18,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
+import com.william.adapter.ImageAdapter;
 import com.william.model.Upload;
+import com.william.util.LoadingDialog;
 
 import java.util.ArrayList;
 
@@ -24,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnlogout,getBtnstorage;
     private DatabaseReference database = FirebaseDatabase.getInstance().getReference("uploads");
     private ArrayList<Upload> listaUploads = new ArrayList<>();
+    private RecyclerView recyclerView;
+    private ImageAdapter imageAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +39,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         btnlogout = findViewById(R.id.main_btn_logout);
         getBtnstorage = findViewById(R.id.main_btn_storage);
+        recyclerView = findViewById(R.id.main_recycler);
+        imageAdapter = new ImageAdapter(getApplicationContext(),listaUploads);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext())
+        );
+
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setAdapter(imageAdapter);
         getBtnstorage.setOnClickListener(v ->{
             //abrir StarageActivity
             Intent intent = new Intent(getApplicationContext(),StorageActivity.class);
@@ -59,6 +74,21 @@ public class MainActivity extends AppCompatActivity {
         * */
         super.onStart();
         getData();
+
+    }
+    public void deleteUpload(Upload upload){
+        LoadingDialog dialog = new LoadingDialog(this,R.layout.custom_dialog);
+        dialog.startLoadingDialog();
+        //deletar img no storege
+        StorageReference imagemRef = FirebaseDatabase.getInstance().getReferenceFromUrl(upload.getUrl());
+
+        imagemRef.delete().addOnSuccessListener(aVoid -> {
+            //deletar img no database
+            database.child(upload.getId()).removeValue().addOnSuccessListener(aVoid1 -> {
+                Toast.makeText(getApplicationContext(),"Item deletado!", Toast.LENGTH_LONG.).show();
+                dialog.dismissDialog();
+            });
+        });
     }
     public void getData(){
         //Listener p/ o nó uploads
