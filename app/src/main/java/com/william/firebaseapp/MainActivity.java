@@ -12,24 +12,30 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.google.firebase.auth.FirebaseAuth;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.william.adapter.ImageAdapter;
-import com.william.model.Upload;
-import com.william.util.LoadingDialog;
+import com.william.firebaseapp.adapter.ImageAdapter;
+import com.william.firebaseapp.model.Upload;
+import com.william.firebaseapp.util.LoadingDialog;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth = FirebaseAuth.getInstance();
-    private Button btnlogout,getBtnstorage;
-    private DatabaseReference database = FirebaseDatabase.getInstance().getReference("uploads");
+    private Button btnLogout,btnStorage;
+    private DatabaseReference database  = FirebaseDatabase.getInstance()
+            .getReference("uploads");
+
     private ArrayList<Upload> listaUploads = new ArrayList<>();
+
     private RecyclerView recyclerView;
     private ImageAdapter imageAdapter;
 
@@ -37,71 +43,102 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnlogout = findViewById(R.id.main_btn_logout);
-        getBtnstorage = findViewById(R.id.main_btn_storage);
-        recyclerView = findViewById(R.id.main_recycler);
-        imageAdapter = new ImageAdapter(getApplicationContext(),listaUploads);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext())
-        );
 
+        btnLogout = findViewById(R.id.main_btn_logout);
+        btnStorage = findViewById(R.id.main_btn_storage);
+        recyclerView = findViewById(R.id.main_recycler);
+
+        imageAdapter = new ImageAdapter(getApplicationContext(),listaUploads);
+
+        imageAdapter.setListener(new ImageAdapter.onItemClickListener() {
+            @Override
+            public void onDeleteClick(int position) {
+                Upload upload = listaUploads.get(position);
+                deleteUpload(upload);
+            }
+
+            @Override
+            public void onUpdateclick(int position) {
+
+            }
+        });
+
+        recyclerView.setLayoutManager(
+                new LinearLayoutManager(getApplicationContext())
+        );
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(imageAdapter);
-        getBtnstorage.setOnClickListener(v ->{
-            //abrir StarageActivity
-            Intent intent = new Intent(getApplicationContext(),StorageActivity.class);
+
+
+
+        btnStorage.setOnClickListener(v -> {
+            //abrir StorageActivity
+            Intent intent = new Intent(getApplicationContext(),
+                    StorageActivity.class);
             startActivity(intent);
         });
-        btnlogout.setOnClickListener( v ->{
-            // deslogar usuario
+
+        btnLogout.setOnClickListener(v -> {
+            //deslogar usuario
             auth.signOut();
             finish();
         });
-       TextView textEmail =findViewById(R.id.main_text_email);
+        TextView textEmail =  findViewById(R.id.main_text_email);
         textEmail.setText(auth.getCurrentUser().getEmail());
 
-
-        TextView textNome =findViewById(R.id.main_text_user);
+        TextView textNome =  findViewById(R.id.main_text_user);
         textNome.setText(auth.getCurrentUser().getDisplayName());
 
     }
 
     @Override
     protected void onStart() {
-        //onStart :
-        /* - faz parte do cliclo de vida da Activity, depois do onCreate()
-        * - É executado quando app inicia,
-        *  - e quando volta da bacground
-        * */
+        // onStart:
+        /*    - faz parte do ciclo de vida da Activity, depois do onCreate()
+         *      - É executado quando app inicia,
+         *      - e quando volta do background
+         *  */
         super.onStart();
         getData();
-
     }
+
     public void deleteUpload(Upload upload){
-        LoadingDialog dialog = new LoadingDialog(this,R.layout.custom_dialog);
+        LoadingDialog dialog = new LoadingDialog(this,
+                R.layout.custom_dialog);
         dialog.startLoadingDialog();
-        //deletar img no storege
-        StorageReference imagemRef = FirebaseDatabase.getInstance().getReferenceFromUrl(upload.getUrl());
 
-        imagemRef.delete().addOnSuccessListener(aVoid -> {
-            //deletar img no database
-            database.child(upload.getId()).removeValue().addOnSuccessListener(aVoid1 -> {
-                Toast.makeText(getApplicationContext(),"Item deletado!", Toast.LENGTH_LONG.).show();
-                dialog.dismissDialog();
-            });
-        });
+        //deletar img no storage
+        StorageReference imagemRef = FirebaseStorage
+                .getInstance()
+                .getReferenceFromUrl(upload.getUrl());
+
+        imagemRef.delete()
+                .addOnSuccessListener(aVoid -> {
+                    // deletar img no database
+                    database.child(upload.getId()).removeValue()
+                            .addOnSuccessListener(aVoid1 -> {
+                                Toast.makeText(getApplicationContext(),
+                                        "Item deletado!", Toast.LENGTH_SHORT).show();
+                                dialog.dismissDialog();
+                            });
+                });
     }
+
     public void getData(){
-        //Listener p/ o nó uploads
-        // - caso ocorra alguma alteração -> retorna TODOS od dadod!!
+        //listener p/ o nó uploads
+        // - caso ocorra alguma alteracao -> retorna TODOS os dados!!
         database.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-               for ( DataSnapshot no_filho :  snapshot.getChildren()){
-                   Upload upload = no_filho.getValue(Upload.class);
-                   listaUploads.add(upload);
-                   Log.i("DATABASE","id: " + upload.getId() + ",nome: " + upload.getNomeImagem() );
+                listaUploads.clear();
+                for( DataSnapshot no_filho :  snapshot.getChildren()){
+                    Upload upload = no_filho.getValue(Upload.class);
+                    listaUploads.add(upload);
+                    Log.i("DATABASE","id: " + upload.getId() + ",nome: "
+                            +  upload.getNomeImagem() );
 
-               }
+                }
+                imageAdapter.notifyDataSetChanged();
             }
 
             @Override

@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".LoginActivity">
+
     <EditText
         android:id="@+id/login_edit_email"
         android:hint="Digite seu e-mail"
@@ -14,10 +15,9 @@
         style="@style/FormStyle"
         android:layout_marginTop="64dp"
         />
-
     <EditText
         android:id="@+id/login_edit_senha"
-        android:hint="Digite seu senha"
+        android:hint="Digite sua senha"
         android:ems="10"
         android:inputType="textPassword"
         style="@style/FormStyle"
@@ -28,7 +28,7 @@
         android:text="Login"
         />
     <Button
-        android:id="@+id/login_btn_Cadastrar"
+        android:id="@+id/login_btn_cadastrar"
         style="@style/FormStyle"
         android:text="Cadastrar"
         />

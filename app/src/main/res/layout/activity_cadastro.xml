@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".CadastroActivity">
+
     <EditText
         android:id="@+id/cadastro_edit_email"
         android:hint="Digite seu e-mail"
@@ -16,7 +17,7 @@
         />
     <EditText
         android:id="@+id/cadastro_edit_nome"
-        android:hint="Digite nome do usuario"
+        android:hint="Digite o nome do usuario"
         android:ems="10"
         android:inputType="textPersonName"
         style="@style/FormStyle"
@@ -24,13 +25,13 @@
 
     <EditText
         android:id="@+id/cadastro_edit_senha"
-        android:hint="Digite seu senha"
+        android:hint="Digite sua senha"
         android:ems="10"
         android:inputType="textPassword"
         style="@style/FormStyle"
         />
     <Button
-        android:id="@+id/cadastro_btn_logar"
+        android:id="@+id/cadastro_btn_cadastrar"
         style="@style/FormStyle"
         android:text="Cadastrar"
         />

@@ -1,4 +1,4 @@
-package com.william.util;
+package com.william.firebaseapp.util;
 
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -1,4 +1,4 @@
-package com.william.adapter;
+package com.william.firebaseapp.adapter;
 
 import android.content.Context;
 import android.view.ContextMenu;
@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.william.firebaseapp.R;
-import com.william.model.Upload;
+import com.william.firebaseapp.model.Upload;
 
 import java.util.ArrayList;
 
@@ -24,8 +23,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageVH> {
     private ArrayList<Upload> listaUploads;
 
     private onItemClickListener listener;
-    public void  setListener(AdapterView.OnItemClickListener){
-       this.listener
+
+    public void setListener(onItemClickListener listener) {
+        this.listener = listener;
     }
 
     public ImageAdapter(Context c, ArrayList<Upload> l){
@@ -82,7 +82,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageVH> {
                     listener.onDeleteClick(position);
                 }
                 return  true;
-            })
+            });
 
         }
     }

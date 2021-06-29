@@ -1,6 +1,6 @@
-package com.william.model;
+package com.william.firebaseapp.model;
 
-public class Upload {
+public class Upload implements Serializable {
     private String id;
     private String nomeImagem;
     private String url;
@@ -9,6 +9,7 @@ public class Upload {
     public Upload(){
 
     }
+
     public Upload(String id, String nomeImagem, String url) {
         this.id = id;
         this.nomeImagem = nomeImagem;
@@ -38,6 +39,5 @@ public class Upload {
     public void setUrl(String url) {
         this.url = url;
     }
-
-
 }
+

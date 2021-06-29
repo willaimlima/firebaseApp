@@ -22,9 +22,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.william.firebaseapp.R;
-import com.william.model.Upload;
-import com.william.util.LoadingDialog;
+import com.william.firebaseapp.model.Upload;
+import com.william.firebaseapp.util.LoadingDialog;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
