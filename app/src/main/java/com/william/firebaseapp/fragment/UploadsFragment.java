@@ -1,19 +1,20 @@
-package com.william.firebaseapp;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+package com.william.firebaseapp.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
-import android.widget.Button;
-import android.widget.TextView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
+
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -21,33 +22,46 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.william.firebaseapp.R;
+import com.william.firebaseapp.UpdateActivity;
 import com.william.firebaseapp.adapter.ImageAdapter;
 import com.william.firebaseapp.model.Upload;
 import com.william.firebaseapp.util.LoadingDialog;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
-    private FirebaseAuth auth = FirebaseAuth.getInstance();
-    private Button btnLogout,btnStorage;
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class UploadsFragment extends Fragment {
     private DatabaseReference database  = FirebaseDatabase.getInstance()
-            .getReference("uploads");
+            .getReference("uploads")
+            .child(FirebaseAuth
+                    .getInstance()
+                    .getCurrentUser()
+                    .getUid()
+            );
 
     private ArrayList<Upload> listaUploads = new ArrayList<>();
 
     private RecyclerView recyclerView;
     private ImageAdapter imageAdapter;
 
+    public UploadsFragment() {
+        // Required empty public constructor
+    }
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View layout =  inflater.inflate(R.layout.fragment_uploads, container, false);
 
-        btnLogout = findViewById(R.id.main_btn_logout);
-        btnStorage = findViewById(R.id.main_btn_storage);
-        recyclerView = findViewById(R.id.main_recycler);
 
-        imageAdapter = new ImageAdapter(getApplicationContext(),listaUploads);
+        recyclerView = layout.findViewById(R.id.main_recycler);
+
+        imageAdapter = new ImageAdapter(getContext(),listaUploads);
         imageAdapter.setListener(new ImageAdapter.OnItemClickListener() {
             @Override
             public void onDeleteClick(int position) {
@@ -58,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onUpdateClick(int position) {
                 Upload upload = listaUploads.get(position);
-                Intent intent = new Intent(getApplicationContext(),
+                Intent intent = new Intent(getActivity(),
                         UpdateActivity.class);
                 //envia o upload para outra Activity
                 intent.putExtra("upload",upload);
@@ -66,35 +80,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         recyclerView.setLayoutManager(
-                new LinearLayoutManager(getApplicationContext())
+                new LinearLayoutManager(getContext())
         );
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(imageAdapter);
 
-
-
-        btnStorage.setOnClickListener(v -> {
-            //abrir StorageActivity
-            Intent intent = new Intent(getApplicationContext(),
-                    StorageActivity.class);
-            startActivity(intent);
-        });
-
-        btnLogout.setOnClickListener(v -> {
-            //deslogar usuario
-            auth.signOut();
-            finish();
-        });
-        TextView textEmail =  findViewById(R.id.main_text_email);
-        textEmail.setText(auth.getCurrentUser().getEmail());
-
-        TextView textNome =  findViewById(R.id.main_text_user);
-        textNome.setText(auth.getCurrentUser().getDisplayName());
-
+        return layout;
     }
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         // onStart:
         /*    - faz parte do ciclo de vida da Activity, depois do onCreate()
          *      - É executado quando app inicia,
@@ -105,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void deleteUpload(Upload upload){
-        LoadingDialog dialog = new LoadingDialog(this,
+        LoadingDialog dialog = new LoadingDialog(getActivity(),
                 R.layout.custom_dialog);
         dialog.startLoadingDialog();
 
@@ -119,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     // deletar img no database
                     database.child(upload.getId()).removeValue()
                             .addOnSuccessListener(aVoid1 -> {
-                                Toast.makeText(getApplicationContext(),
+                                Toast.makeText(getContext(),
                                         "Item deletado!", Toast.LENGTH_SHORT).show();
                                 dialog.dismissDialog();
                             });
@@ -127,6 +122,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getData(){
+
+
         //listener p/ o nó uploads
         // - caso ocorra alguma alteracao -> retorna TODOS os dados!!
         database.addValueEventListener(new ValueEventListener() {

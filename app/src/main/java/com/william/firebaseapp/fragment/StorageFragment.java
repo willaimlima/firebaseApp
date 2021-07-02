@@ -1,7 +1,4 @@
-package com.william.firebaseapp;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+package com.william.firebaseapp.fragment;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -10,24 +7,38 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.william.firebaseapp.R;
 import com.william.firebaseapp.model.Upload;
 import com.william.firebaseapp.util.LoadingDialog;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
 
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class StorageFragment extends Fragment {
 
-public class StorageActivity extends AppCompatActivity {
     //referencia p/ FirebaseStorage
     private FirebaseStorage storage = FirebaseStorage.getInstance();
     private Button btnUpload,btnGaleria;
@@ -38,19 +49,29 @@ public class StorageActivity extends AppCompatActivity {
     private DatabaseReference database = FirebaseDatabase.getInstance()
             .getReference("uploads");
 
+    private FirebaseAuth auth = FirebaseAuth.getInstance();
+    public StorageFragment() {
+        // Required empty public constructor
+    }
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_storage);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        database = FirebaseDatabase
+                .getInstance()
+                .getReference("uploads")
+                .child(auth.getUid());
 
-        btnUpload = findViewById(R.id.storage_btn_upload);
-        imageView = findViewById(R.id.storage_image_cel);
-        btnGaleria = findViewById(R.id.storage_btn_galeria);
-        editNome = findViewById(R.id.storage_edit_nome);
+        // Inflate the layout for this fragment
+        View layout =  inflater.inflate(R.layout.fragment_storage, container, false);
+
+        btnUpload = layout.findViewById(R.id.storage_btn_upload);
+        imageView = layout.findViewById(R.id.storage_image_cel);
+        btnGaleria = layout.findViewById(R.id.storage_btn_galeria);
+        editNome = layout.findViewById(R.id.storage_edit_nome);
 
         btnUpload.setOnClickListener(v ->{
             if(editNome.getText().toString().isEmpty()){
-                Toast.makeText(this,"Digite um nome para Imagem",
+                Toast.makeText(getActivity(),"Digite um nome para Imagem",
                         Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -71,11 +92,12 @@ public class StorageActivity extends AppCompatActivity {
             startActivityForResult(intent,112);
         });
 
+        return layout;
     }
 
     private void uploadImagemUri() {
 
-        LoadingDialog dialog = new LoadingDialog(this,R.layout.custom_dialog);
+        LoadingDialog dialog = new LoadingDialog(getActivity(),R.layout.custom_dialog);
         dialog.startLoadingDialog();
 
         String tipo = getFileExtension(imageUri);
@@ -90,7 +112,7 @@ public class StorageActivity extends AppCompatActivity {
 
         imagemRef.putFile(imageUri)
                 .addOnSuccessListener(taskSnapshot -> {
-                    Toast.makeText(this,"Upload feito com sucesso",
+                    Toast.makeText(getActivity(),"Upload feito com sucesso",
                             Toast.LENGTH_SHORT).show();
 
                     /* inserir dados da imagem no RealtimeDatabase */
@@ -109,11 +131,16 @@ public class StorageActivity extends AppCompatActivity {
                                 refUpload.setValue(upload)
                                         .addOnSuccessListener(aVoid -> {
                                             dialog.dismissDialog();
-                                            Toast.makeText(getApplicationContext(),
+                                            Toast.makeText(getActivity(),
                                                     "Upload feito com sucesso!",
                                                     Toast.LENGTH_SHORT ).show();
+                                            NavController navController  = Navigation
+                                                    .findNavController(getActivity(),
+                                                            R.id.nav_host_fragment);
 
-                                            finish();
+                                            //voltar para a fragment inicial
+                                            navController.navigateUp();
+
                                         });
 
 
@@ -125,16 +152,17 @@ public class StorageActivity extends AppCompatActivity {
                 });
 
     }
+
     //retornar o tipo(.png, .jpg) da imagem
     private String getFileExtension(Uri imageUri) {
-        ContentResolver cr = getContentResolver();
+        ContentResolver cr = getActivity().getContentResolver();
         return MimeTypeMap.getSingleton()
                 .getExtensionFromMimeType(cr.getType(imageUri));
     }
 
     //resultado do startActivityResult()
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.i("RESULT", "requestCode: "+ requestCode +
                 ",resultCode: "+ resultCode);
@@ -155,6 +183,7 @@ public class StorageActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
         return baos.toByteArray();
     }
+
     //fazer um upload de uma imagem convertida p/ bytes
     public void uploadImagemByte(){
         byte[] data = convertImage2Byte(imageView);
@@ -166,7 +195,7 @@ public class StorageActivity extends AppCompatActivity {
         imagemRef.putBytes(data)
                 .addOnSuccessListener(taskSnapshot -> {
 
-                    Toast.makeText(this, "Upload feito com sucesso!",
+                    Toast.makeText(getActivity(), "Upload feito com sucesso!",
                             Toast.LENGTH_SHORT).show();
                     Log.i("UPLOAD","Sucesso");
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="login_btn_Cadastrar" type="id" />
+    <item name="cadastro_btn_logar" type="id" />
+    <item name="nav_host_fragment" type="id" />
+    <item name="frag_main_text" type="id" />
+    <item name="user_recycler_btn_add" type="id" />
+    <item name="user_recycler_email" type="id" />
+    <item name="user_recycler_nome" type="id" />
+    <item name="nav_menu_logout" type="id" />
+    <item name="frag_main_recycler_user" type="id" />
+</resources>

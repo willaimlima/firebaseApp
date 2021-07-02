@@ -1,5 +1,7 @@
 package com.william.firebaseapp.model;
 
+import java.io.Serializable;
+
 public class Upload implements Serializable {
     private String id;
     private String nomeImagem;
@@ -40,4 +42,3 @@ public class Upload implements Serializable {
         this.url = url;
     }
 }
-
