@@ -9,4 +9,7 @@
     <item name="user_recycler_nome" type="id" />
     <item name="nav_menu_logout" type="id" />
     <item name="frag_main_recycler_user" type="id" />
+    <item name="frag_notification_title" type="id" />
+    <item name="frag_notification_msg" type="id" />
+    <item name="frag_notificaion_btn_send" type="id" />
 </resources>
