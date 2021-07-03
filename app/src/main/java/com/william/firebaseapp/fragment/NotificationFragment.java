@@ -15,8 +15,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+
 import com.clemilton.firebaseappsala.R;
 import com.william.firebaseapp.NavigationActivity;
+import com.william.firebaseapp.util.NotificationReceiver;
 
 import static com.william.firebaseapp.util.App.CHANNEL_1;
 
@@ -28,14 +30,14 @@ public class NotificationFragment extends Fragment {
     private NotificationManagerCompat notificationManager;
 
     public NotificationFragment() {
-        // Required empty public constructor
+        // Construtor público vazio obrigatório
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflar o layout para este fragmento
         View layout =  inflater.inflate(R.layout.fragment_notification, container, false);
         notificationManager = NotificationManagerCompat.from(getContext());
 
@@ -66,6 +68,18 @@ public class NotificationFragment extends Fragment {
                                             intent,
                                             0
             );*/
+            //criar um broadcast receiver ->
+            // - ele deve ser ativado EXPLICITAMENTE!
+
+            // - não deve durar mas de 10sg
+            Intent broadcastIntent = new Intent(getContext(), NotificationReceiver.class);
+            broadcastIntent.putExtra("toast",msg);
+
+            PendingIntent actionIntent = PendingIntent.getBroadcast(
+                    getContext(),0,broadcastIntent,PendingIntent.FLAG_CANCEL_CURRENT
+            );
+
+
 
             //Criar a notificação
             Notification notification = new NotificationCompat
@@ -76,7 +90,7 @@ public class NotificationFragment extends Fragment {
                     .setPriority(Notification.PRIORITY_HIGH)
                     .setContentIntent(contentIntent)
                     .addAction(R.drawable.ic_account_circle_black_24dp,
-                            "Toast",actionIntent)
+                            "Toast", actionIntent)
                     .build();
             notificationManager.notify(1,notification);
         });

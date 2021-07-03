@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.william.firebaseapp.R;
+import com.clemilton.firebaseappsala.R;
 import com.william.firebaseapp.model.Upload;
 
 import java.util.ArrayList;

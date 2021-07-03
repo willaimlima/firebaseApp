@@ -12,4 +12,7 @@
     <item name="frag_notification_title" type="id" />
     <item name="frag_notification_msg" type="id" />
     <item name="frag_notificaion_btn_send" type="id" />
+    <item name="navigation_icon" type="id" />
+    <item name="nav_drawerLayout" type="id" />
+    <item name="navigationView" type="id" />
 </resources>

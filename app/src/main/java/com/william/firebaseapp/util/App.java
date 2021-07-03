@@ -31,4 +31,3 @@ public class App extends Application {
         }
     }
 }
-© 2021 GitHub, Inc.

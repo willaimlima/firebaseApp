@@ -10,8 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.clemilton.firebaseappsala.R;
 import com.makeramen.roundedimageview.RoundedImageView;
-import com.william.firebaseapp.R;
 import com.william.firebaseapp.model.User;
 
 import java.util.ArrayList;
